@@ -1,0 +1,159 @@
+@startuml diagrama_clases
+' ============================================================
+' Sistema de Gestión de Emergencias - Diagrama de Clases
+' Notación: + public | - private | # protected
+'            «abstract» = clase/método abstracto
+'            *-- = composición   o-- = agregación   --> = dependencia
+' ============================================================
+
+skinparam classAttributeIconSize 0
+hide empty members
+
+' ------------------------- USUARIOS -------------------------
+abstract class Usuario {
+  - nombre : String
+  + Usuario(nombre : String)
+  + getNombre() : String
+  + «abstract» getRol() : String
+}
+
+class Administrador {
+  + Administrador(nombre : String)
+  + getRol() : String
+}
+
+class Operador {
+  + Operador(nombre : String)
+  + getRol() : String
+}
+
+Usuario <|-- Administrador
+Usuario <|-- Operador
+
+' ------------------------- RECURSOS -------------------------
+abstract class Recurso {
+  - id : int
+  - nombre : String
+  - disponible : boolean
+  + Recurso(id : int, nombre : String)
+  + getId() : int
+  + getNombre() : String
+  + isDisponible() : boolean
+  + setDisponible(disponible : boolean) : void
+  + «abstract» descripcion() : String
+}
+
+class Vehiculo {
+  - placa : String
+  + Vehiculo(id : int, nombre : String, placa : String)
+  + descripcion() : String
+}
+
+class Personal {
+  - cargo : String
+  + Personal(id : int, nombre : String, cargo : String)
+  + descripcion() : String
+}
+
+class Equipo {
+  - tipoEquipo : String
+  + Equipo(id : int, nombre : String, tipoEquipo : String)
+  + descripcion() : String
+}
+
+Recurso <|-- Vehiculo
+Recurso <|-- Personal
+Recurso <|-- Equipo
+
+' ------------------------- EMERGENCIAS ---------------------
+class TipoEmergencia {
+  - nombre : String
+  - prioridad : int
+  + TipoEmergencia(nombre : String, prioridad : int)
+  + getNombre() : String
+  + getPrioridad() : int
+  + toString() : String
+}
+
+class Emergencia {
+  - id : int
+  - descripcion : String
+  - ubicacion : String
+  - tipo : TipoEmergencia
+  - estado : String
+  - recursos : List<Recurso>
+  - atencion : String
+  + Emergencia(id : int, descripcion : String, ubicacion : String, tipo : TipoEmergencia)
+  + getId() : int
+  + getDescripcion() : String
+  + getUbicacion() : String
+  + getTipo() : TipoEmergencia
+  + getEstado() : String
+  + getRecursos() : List<Recurso>
+  + asignarRecurso(recurso : Recurso) : void
+  + actualizarEstado(estado : String) : void
+  + registrarAtencion(atencion : String) : void
+  + toString() : String
+}
+
+' ------------------------- NÚCLEO ---------------------------
+class SistemaEmergencias {
+  - emergencias : List<Emergencia>
+  - tipos : List<TipoEmergencia>
+  - recursos : List<Recurso>
+  - siguienteIdEmergencia : int
+  - siguienteIdRecurso : int
+  + SistemaEmergencias()
+  + registrarTipo(nombre : String, prioridad : int) : void
+  + registrarRecurso(clase : String, nombre : String, detalle : String) : void
+  + registrarEmergencia(descripcion : String, ubicacion : String, tipo : TipoEmergencia) : void
+  + asignarRecurso(idEmergencia : int, idRecurso : int) : void
+  + actualizarEstado(id : int, estado : String) : void
+  + finalizarAtencion(id : int, detalle : String) : void
+  - buscarEmergencia(id : int) : Emergencia
+  - buscarRecurso(id : int) : Recurso
+  + getTipos() : List<TipoEmergencia>
+  + getEmergencias() : List<Emergencia>
+  + getRecursos() : List<Recurso>
+  + listarEmergencias() : String
+  + listarRecursos(soloDisponibles : boolean) : String
+}
+
+' ------------------------- INTERFAZ -------------------------
+class SistemaEmergenciasApp {
+  - sistema : SistemaEmergencias
+  - area : JTextArea
+  - usuario : Usuario
+  + SistemaEmergenciasApp()
+  - mostrarInicio() : void
+  - mostrarMenu() : void
+  - crearTipo() : void
+  - crearRecurso() : void
+  - registrarEmergencia() : void
+  - asignarRecurso() : void
+  - actualizarEstado() : void
+  - finalizarAtencion() : void
+  - mostrarEmergencias() : void
+  - mostrarRecursos() : void
+  - mensaje(texto : String) : void
+  + «static» main(args : String[]) : void
+}
+
+' ------------------------- RELACIONES ----------------------
+' Composición: el sistema es dueño de sus listas
+SistemaEmergencias *-- "0..*" Emergencia : emergencias
+SistemaEmergencias *-- "0..*" TipoEmergencia : tipos
+SistemaEmergencias *-- "0..*" Recurso : recursos
+
+' Dependencias
+Emergencia --> TipoEmergencia : tipo
+Emergencia o-- "0..*" Recurso : recursos asignados
+SistemaEmergenciasApp --> SistemaEmergencias : usa
+SistemaEmergenciasApp --> Usuario : usuario actual
+SistemaEmergenciasApp ..> Administrador : instancia (instanceof)
+SistemaEmergenciasApp ..> Operador : instancia (instanceof)
+SistemaEmergencias ..> Vehiculo : crea
+SistemaEmergencias ..> Personal : crea
+SistemaEmergencias ..> Equipo : crea
+
+@enduml

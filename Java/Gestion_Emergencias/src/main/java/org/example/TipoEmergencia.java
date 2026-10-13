@@ -1,13 +1,15 @@
 package org.example;
 
-// Define la categoría de una emergencia y su nivel de prioridad.
+/**
+ * Define la categoría de una emergencia y su nivel de prioridad.
+ */
 public class TipoEmergencia {
     private String nombre;
     private int prioridad;
 
     public TipoEmergencia(String nombre, int prioridad) {
         this.nombre = nombre;
-        this.prioridad = prioridad;
+        setPrioridad(prioridad);
     }
 
     public String getNombre() {
@@ -16,6 +18,14 @@ public class TipoEmergencia {
 
     public int getPrioridad() {
         return prioridad;
+    }
+
+    public void setPrioridad(int prioridad) {
+        if (prioridad < 1) {
+            throw new IllegalArgumentException(
+                    "La prioridad debe ser mayor que cero.");
+        }
+        this.prioridad = prioridad;
     }
 
     @Override

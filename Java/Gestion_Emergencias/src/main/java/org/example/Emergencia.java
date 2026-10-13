@@ -3,13 +3,15 @@ package org.example;
 import java.util.ArrayList;
 import java.util.List;
 
-// Modelo de una emergencia: guarda su estado, sus recursos asignados y la atención final.
+/**
+ * Modelo de una emergencia: guarda su estado, sus recursos asignados y la atención registrada.
+ */
 public class Emergencia {
     private int id;
     private String descripcion;
     private String ubicacion;
     private TipoEmergencia tipo;
-    private String estado;
+    private Estado estado;
     private List<Recurso> recursos;
     private String atencion;
 
@@ -19,7 +21,7 @@ public class Emergencia {
         this.descripcion = descripcion;
         this.ubicacion = ubicacion;
         this.tipo = tipo;
-        this.estado = "Pendiente";
+        this.estado = Estado.PENDIENTE;
         this.recursos = new ArrayList<>();
         this.atencion = "";
     }
@@ -40,7 +42,16 @@ public class Emergencia {
         return tipo;
     }
 
-    public String getEstado() {
+    // Permite reclasificar una emergencia que aún no fue atendida.
+    public void setTipo(TipoEmergencia tipo) {
+        if (estado.esFinal()) {
+            throw new IllegalStateException(
+                    "No se puede reclasificar una emergencia finalizada.");
+        }
+        this.tipo = tipo;
+    }
+
+    public Estado getEstado() {
         return estado;
     }
 
@@ -48,16 +59,52 @@ public class Emergencia {
         return recursos;
     }
 
+    public String getAtencion() {
+        return atencion;
+    }
+
     public void asignarRecurso(Recurso recurso) {
         recursos.add(recurso);
     }
 
-    public void actualizarEstado(String estado) {
+    // Cambia el estado validando la transición contra el enum Estado.
+    public void actualizarEstado(Estado estado) {
+        if (this.estado.esFinal()) {
+            throw new IllegalStateException(
+                    "La emergencia ya fue finalizada.");
+        }
+        if (this.estado == estado) {
+            throw new IllegalStateException(
+                    "La emergencia ya está en estado " + estado.getEtiqueta() + ".");
+        }
+        if (!this.estado.puedeTransitarA(estado)) {
+            throw new IllegalStateException(
+                    "No se puede pasar de " + this.estado.getEtiqueta()
+                            + " a " + estado.getEtiqueta() + ".");
+        }
         this.estado = estado;
     }
 
+    // Cierre de la atención: salta la tabla de transiciones y queda en estado final.
     public void registrarAtencion(String atencion) {
+        if (estado.esFinal()) {
+            throw new IllegalStateException(
+                    "La atención ya fue registrada.");
+        }
         this.atencion = atencion;
+    }
+
+    // Cierre de la atención: pasa directo a estado final liberando la tabla de transiciones.
+    public void marcarFinalizada() {
+        if (estado.esFinal()) {
+            throw new IllegalStateException(
+                    "La emergencia ya fue finalizada.");
+        }
+        this.estado = Estado.FINALIZADA;
+    }
+
+    public boolean estaAtendida() {
+        return estado.esFinal();
     }
 
     @Override
@@ -67,7 +114,7 @@ public class Emergencia {
                 + " | " + descripcion
                 + " | Ubicación: " + ubicacion
                 + " | Prioridad: " + tipo.getPrioridad()
-                + " | Estado: " + estado
+                + " | Estado: " + estado.getEtiqueta()
                 + " | Recursos asignados: " + recursos.size()
                 + (atencion.isEmpty() ? "" : " | Atención: " + atencion);
     }
